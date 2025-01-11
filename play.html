@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HorsEE: E-Chess</title>
+  <style>
+    /* CSS styling for the chessboard */
+    .chessboard {
+      width: 400px;
+      height: 400px;
+      border: 1px solid black;
+      display: grid;
+      grid-template-columns: repeat(8, 50px);
+      grid-template-rows: repeat(8, 50px);
+    }
+
+    .square {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative; /* For highlighting */
+    }
+
+    .white-square {
+      background-color: #f0f0f0;
+    }
+
+    .black-square {
+      background-color: #b58863;
+    }
+
+    .highlighted {
+      background-color: #808080;
+    }
+
+    .piece {
+      width: 40px;
+      height: 40px;
+    }
+
+    .white-pawn {
+      background-color: white;
+      border-radius: 50%;
+    }
+
+    .white-rook {
+      background-color: white;
+    }
+
+    .white-knight {
+      background-color: white;
+    }
+
+    .white-bishop {
+      background-color: white;
+    }
+
+    .white-queen {
+      background-color: white;
+    }
+
+    .white-king {
+      background-color: white;
+    }
+
+    .black-pawn {
+      background-color: black;
+      border-radius: 50%;
+    }
+
+    .black-rook {
+      background-color: black;
+    }
+
+    .black-knight {
+      background-color: black;
+    }
+
+    .black-bishop {
+      background-color: black;
+    }
+
+    .black-queen {
+      background-color: black;
+    }
+
+    .black-king {
+      background-color: black;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="chessboard">
+    </div>
+
+  <script>
+    const chessboard = document.querySelector('.chessboard');
+    let currentPlayer = 'white'; 
+    let selectedPiece = null; 
+
+    const boardState = [
+      ['bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN', 'bR'],
+      ['bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP'],
+      ['', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
+      ['wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP'],
+      ['wR', 'wN', 'wB', 'wQ', 'wK', 'wB', 'wN', 'wR'],
+    ];
+
+    function createSquare(row, col) {
+      const square = document.createElement('div');
+      square.classList.add('square');
+      square.dataset.row = row;
+      square.dataset.col = col; 
+
+      if ((row + col) % 2 === 0) {
+        square.classList.add('white-square');
+      } else {
+        square.classList.add('black-square');
+      }
+
+      // Add piece if present
+      const pieceCode = boardState[row][col];
+      if (pieceCode) {
+        const piece = document.createElement('div');
+        piece.classList.add('piece', pieceCode);
+        square.appendChild(piece); 
+      } 
+
+      chessboard.appendChild(square);
+    }
+
+    function handleSquareClick(row, col) {
+      const selectedSquare = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+      const selectedPieceCode = boardState[row][col];
+
+      // If no piece is selected, select the piece
+      if (!selectedPiece) {
+        if (selectedPieceCode && selectedPieceCode.charAt(0) === currentPlayer) {
+          selectedPiece = selectedSquare;
+          selectedSquare.classList.add('highlighted'); 
+        }
+      } else { 
+        // If a piece is already selected, try to move it
+        if (selectedSquare === selectedPiece) { 
+          // Deselect the piece
+          selectedPiece.classList.remove('highlighted');
+          selectedPiece = null;
+        } else {
+          // Basic move validation (needs significant improvement)
+          if (isValidMove(selectedPiece.dataset.row, selectedPiece.dataset.col, row, col)) { 
+            boardState[row][col] = boardState[selectedPiece.dataset.row][selectedPiece.dataset.col];
+            boardState[selectedPiece.dataset.row][selectedPiece.dataset.col] = ''; 
+
+            selectedPiece.removeChild(selectedPiece.firstChild);
+            selectedSquare.appendChild(selectedPiece.firstChild); 
+
+            selectedPiece.classList.remove('highlighted');
+            selectedPiece = null;
+
+            // Change player turn
+            currentPlayer = currentPlayer === 'white' ? 'black' : 'white'; 
+          }
+        }
+      }
+    }
+
+    function isValidMove(fromRow, fromCol, toRow, toCol) {
+      const piece = boardState[fromRow][fromCol];
+
+      if (piece.charAt(1) === 'P') { // Pawn
+        if (piece.charAt(0) === 'w') { 
+          // White pawn
+          if (toRow === fromRow - 1 && toCol === fromCol && boardState[toRow][toCol] === '') { 
+            return true; 
+          }
+          if (fromRow === 6 && toRow === 4 && toCol === fromCol && boardState[toRow][toCol] === '' && boardState[toRow + 1][toCol] === '') {
+            return true; 
+          }
+          if (fromRow === fromRow - 1 && (toCol === fromCol - 1 || toCol === fromCol + 1) && 
+              boardState[toRow][toCol] && boardState[toRow][toCol].charAt(0) === 'b') {
+            return true; 
+          }
+        } else if (piece.charAt(0) === 'b') { 
+          // Black pawn
+          if (toRow === fromRow + 1 && toCol === fromCol && boardState[toRow][toCol] === '') { 
+            return true; 
+          }
+          if (fromRow === 1 && toRow === 3 && toCol === fromCol && boardState[toRow][toCol] === '' && boardState[toRow - 1][toCol] === '') {
+            return true; 
+          }
+          if (toRow === fromRow + 1 && (toCol === fromCol - 1 || toCol === fromCol + 1) && 
+              boardState[toRow][toCol] && boardState[toRow][toCol].charAt(0) === 'w') {
+            return true; 
+          }
+        }
+      }
+
+      // This is a VERY simplified example and needs to be extended for other pieces (rook, knight, bishop, queen, king)
+
+      return false; 
+    }
+
+    // Create the chessboard
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        createSquare(row, col);
+      }
+    }
+
+  </script>
+
+</body>
+</html>
